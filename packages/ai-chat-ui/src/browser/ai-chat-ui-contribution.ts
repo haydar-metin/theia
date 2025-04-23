@@ -14,22 +14,30 @@
 // SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-only WITH Classpath-exception-2.0
 // *****************************************************************************
 
-import { inject, injectable } from '@theia/core/shared/inversify';
-import { CommandRegistry, isOSX, nls, QuickInputButton, QuickInputService, QuickPickItem } from '@theia/core';
-import { Widget } from '@theia/core/lib/browser';
-import { AI_CHAT_NEW_CHAT_WINDOW_COMMAND, AI_CHAT_SHOW_CHATS_COMMAND, ChatCommands } from './chat-view-commands';
 import { ChatAgentLocation, ChatService } from '@theia/ai-chat';
-import { AbstractViewContribution } from '@theia/core/lib/browser/shell/view-contribution';
-import { TabBarToolbarContribution, TabBarToolbarRegistry } from '@theia/core/lib/browser/shell/tab-bar-toolbar';
-import { ChatViewWidget } from './chat-view-widget';
-import { Deferred } from '@theia/core/lib/common/promise-util';
-import { SecondaryWindowHandler } from '@theia/core/lib/browser/secondary-window-handler';
-import { formatDistance } from 'date-fns';
-import * as locales from 'date-fns/locale';
 import { AI_SHOW_SETTINGS_COMMAND } from '@theia/ai-core/lib/browser';
 import { OPEN_AI_HISTORY_VIEW } from '@theia/ai-history/lib/browser/ai-history-contribution';
+import { Command, CommandRegistry, isOSX, nls, QuickInputButton, QuickInputService, QuickPickItem, URI } from '@theia/core';
+import { codicon, Widget } from '@theia/core/lib/browser';
+import { SecondaryWindowHandler } from '@theia/core/lib/browser/secondary-window-handler';
+import { TabBarToolbarContribution, TabBarToolbarRegistry } from '@theia/core/lib/browser/shell/tab-bar-toolbar';
+import { AbstractViewContribution } from '@theia/core/lib/browser/shell/view-contribution';
+import { Deferred } from '@theia/core/lib/common/promise-util';
+import { inject, injectable } from '@theia/core/shared/inversify';
+import { MiniBrowserProps } from '@theia/mini-browser/lib/browser/mini-browser-content';
+import { MiniBrowserOpenerOptions, MiniBrowserOpenHandler } from '@theia/mini-browser/lib/browser/mini-browser-open-handler';
+import { formatDistance } from 'date-fns';
+import * as locales from 'date-fns/locale';
+import { AI_CHAT_NEW_CHAT_WINDOW_COMMAND, AI_CHAT_SHOW_CHATS_COMMAND, ChatCommands } from './chat-view-commands';
+import { ChatViewWidget } from './chat-view-widget';
 
 export const AI_CHAT_TOGGLE_COMMAND_ID = 'aiChat:toggle';
+
+export const DEMO_MINI_BROWSER = Command.toLocalizedCommand({
+    id: 'chat:widget:mini-browser',
+    iconClass: codicon('unlock'),
+    label: 'Open Demo Mini Browser',
+}, 'MINI_BROWSER');
 
 @injectable()
 export class AIChatContribution extends AbstractViewContribution<ChatViewWidget> implements TabBarToolbarContribution {
@@ -64,8 +72,27 @@ export class AIChatContribution extends AbstractViewContribution<ChatViewWidget>
         });
     }
 
+    @inject(MiniBrowserOpenHandler)
+    protected readonly miniBrowserOpenHandler: MiniBrowserOpenHandler;
+
+    async openDemoApp(): Promise<void> {
+        const uri = new URI('http://localhost:3000/demo');
+
+        const options: MiniBrowserOpenerOptions = {
+            sandbox: [MiniBrowserProps.SandboxOptions['allow-same-origin'], MiniBrowserProps.SandboxOptions['allow-scripts']],
+        };
+
+        await this.miniBrowserOpenHandler.open(uri, { widgetOptions: { area: 'main' }, mode: 'activate', ...options });
+    }
+
     override registerCommands(registry: CommandRegistry): void {
         super.registerCommands(registry);
+        registry.registerCommand(DEMO_MINI_BROWSER, {
+            execute: () => {
+                this.openDemoApp();
+            }
+        });
+
         registry.registerCommand(ChatCommands.SCROLL_LOCK_WIDGET, {
             isEnabled: widget => this.withWidget(widget, chatWidget => !chatWidget.isLocked),
             isVisible: widget => this.withWidget(widget, chatWidget => !chatWidget.isLocked),

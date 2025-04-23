@@ -521,6 +521,9 @@ const ChatInput: React.FunctionComponent<ChatInputProperties> = (props: ChatInpu
         {changeSetUI?.elements &&
             <ChangeSetBox changeSet={changeSetUI} />
         }
+        {/* <div id="webiframe-container">
+            <iframe sandbox="allow-same-origin allow-scripts" id="webiframe" src="http://localhost:8080" width="100%" height="300px"></iframe>
+        </div> */}
         <div className='theia-ChatInput-Editor-Box'>
             <div className='theia-ChatInput-Editor' ref={editorContainerRef} onKeyDown={onKeyDown} onFocus={handleInputFocus} onBlur={handleInputBlur}>
                 <div ref={placeholderRef} className='theia-ChatInput-Editor-Placeholder'>{nls.localizeByDefault('Ask a question')}</div>

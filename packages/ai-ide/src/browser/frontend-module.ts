@@ -20,7 +20,10 @@ import { Agent, AIVariableContribution, bindToolProvider } from '@theia/ai-core/
 import { ArchitectAgent } from './architect-agent';
 import { CoderAgent } from './coder-agent';
 import { FileContentFunction, FileDiagonsticProvider, GetWorkspaceDirectoryStructure, GetWorkspaceFileList, WorkspaceFunctionScope } from './workspace-functions';
-import { FrontendApplicationContribution, PreferenceContribution, WidgetFactory, bindViewContribution } from '@theia/core/lib/browser';
+import {
+    FrontendApplicationContribution, PreferenceContribution, RemoteConnectionProvider,
+    WidgetFactory, bindViewContribution, type ServiceConnectionProvider
+} from '@theia/core/lib/browser';
 import { WorkspacePreferencesSchema } from './workspace-preferences';
 import {
     ReplaceContentInFileFunctionHelper,
@@ -45,6 +48,9 @@ import { AIMCPConfigurationWidget } from './ai-configuration/mcp-configuration-w
 import { ChatWelcomeMessageProvider } from '@theia/ai-chat-ui/lib/browser/chat-tree-view';
 import { IdeChatWelcomeMessageProvider } from './ide-chat-welcome-message-provider';
 import { AITokenUsageConfigurationWidget } from './ai-configuration/token-usage-configuration-widget';
+import { AudBrowserAgent } from './aud-browser-agent';
+import { AudBrowser, audBrowserPath } from '../common/aud-protocol';
+import { AudCloseBrowserProvider, AudGetDomProvider, AudInvokeActionProvider, AudNewPageProvider } from './aud-browser-agent-functions';
 
 export default new ContainerModule(bind => {
     bind(PreferenceContribution).toConstantValue({ schema: WorkspacePreferencesSchema });
@@ -68,6 +74,18 @@ export default new ContainerModule(bind => {
     bind(CommandChatAgent).toSelf().inSingletonScope();
     bind(Agent).toService(CommandChatAgent);
     bind(ChatAgent).toService(CommandChatAgent);
+
+    bind(AudBrowserAgent).toSelf().inSingletonScope();
+    bind(Agent).toService(AudBrowserAgent);
+    bind(ChatAgent).toService(AudBrowserAgent);
+    bindToolProvider(AudNewPageProvider, bind);
+    bindToolProvider(AudCloseBrowserProvider, bind);
+    bindToolProvider(AudInvokeActionProvider, bind);
+    bindToolProvider(AudGetDomProvider, bind);
+    bind(AudBrowser).toDynamicValue(ctx => {
+        const provider = ctx.container.get<ServiceConnectionProvider>(RemoteConnectionProvider);
+        return provider.createProxy<AudBrowser>(audBrowserPath);
+    }).inSingletonScope();
 
     bind(DefaultChatAgentId).toConstantValue({ id: OrchestratorChatAgentId });
     bind(FallbackChatAgentId).toConstantValue({ id: UniversalChatAgentId });

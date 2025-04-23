@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Hello World Example</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 2rem;
+    }
+    input {
+      padding: 0.5rem;
+      font-size: 1rem;
+      margin-right: 1rem;
+    }
+    button {
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      margin-right: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>Hello World</h1>
+  <input type="text" id="input" placeholder="Type something..." />
+  <span id="#output">Output:</span>
+  <button onclick="send()" id="send">Send</button>
+  <button onclick="triggerError()" id="error">Error</button>
+
+  <script>
+    function send() {
+      const value = document.getElementById('input').value;
+      const output = document.getElementById('#output');
+      output.textContent = 'Output: ' + value;
+    }
+
+    function triggerError() {
+      throw new Error('This is a test error from the Error button');
+    }
+  </script>
+</body>
+</html>
